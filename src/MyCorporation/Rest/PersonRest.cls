@@ -126,7 +126,7 @@ ClassMethod GetPerson(id As %Integer) As %Status
 
     set %response.Status = ..#HTTP200OK
     set %response.ContentType = ..#CONTENTTYPEJSON
-    write json.%ToJSON(json)
+    write json.%ToJSON()
 
     Quit $$$OK
 }
