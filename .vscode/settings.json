@@ -1,0 +1,7 @@
+{
+    "objectscript.conn": {
+        "server": "intersystems-iris-docker",
+        "ns": "HTEST",
+        "active": true
+    }
+}
