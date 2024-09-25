@@ -23,9 +23,9 @@ ClassMethod Populate(amount As %Integer) As %Status
 
 ClassMethod Ping() As %Status
 {
-    set %response.ContentType = ..#CONTENTTYPEJSON
-    set %response.Status = ..#HTTP200OK
-   
+    Set %response.ContentType = ..#CONTENTTYPEJSON
+    Set %response.Status = ..#HTTP200OK
+
     Quit $$$OK
 }
 
@@ -33,28 +33,30 @@ ClassMethod CreatePerson() As %Status
 {
     #dim ex As %Exception.SystemException
 
+    Try
+    {
+        Set dto = %request.Content
+        Set person = ##class(MyCorporation.Rest.PersonMapper).FromJSON(dto)
 
-    try {
-        set dto = %request.Content
-        set person = ##class(MyCorporation.Rest.PersonMapper).FromJSON(dto)
-        
-        do ##class(MyCorporation.Service.PersonService).CreatePerson(person)
+        Do ##class(MyCorporation.Service.PersonService).CreatePerson(person)
 
-        set json = ##class(MyCorporation.Rest.PersonMapper).ObjectToJSON(person)
+        Set json = ##class(MyCorporation.Rest.PersonMapper).ObjectToJSON(person)
 
-        set %response.Status = ..#HTTP200OK
-        set %response.ContentType = ..#CONTENTTYPEJSON
-        write json.%ToJSON()
-    } catch ex {
-        set %response.Status = ..#HTTP400BADREQUEST
-        set %response.ContentType = ..#CONTENTTYPEJSON
-        set error = {}
-        do error.%Set("code", ex.Code)
-        do error.%Set("name", ex.Name)
-        do error.%Set("location", ex.Location)
-        do error.%Set("data", ex.Data)
-        
-        write error.%ToJSON()
+        Set %response.Status = ..#HTTP200OK
+        Set %response.ContentType = ..#CONTENTTYPEJSON
+        Write json.%ToJSON()
+    }
+    Catch ex
+    {
+        Set %response.Status = ..#HTTP400BADREQUEST
+        Set %response.ContentType = ..#CONTENTTYPEJSON
+        Set error = {}
+        Do error.%Set("code", ex.Code)
+        Do error.%Set("name", ex.Name)
+        Do error.%Set("location", ex.Location)
+        Do error.%Set("data", ex.Data)
+
+        Write error.%ToJSON()
     }
 
     Quit $$$OK
@@ -62,83 +64,87 @@ ClassMethod CreatePerson() As %Status
 
 ClassMethod UpdatePerson(id As %Integer) As %Status
 {
-    set content = %request.Content
-    set dto = {}.%FromJSON(content)
+    Set content = %request.Content
+    Set dto = {}.%FromJSON(content)
 
-    set person = ##class(MyCorporation.Service.PersonService).FindById(id)
-    if '$ISOBJECT(person) {
-        set %response.Status = ..#HTTP404NOTFOUND
-        set %response.ContentType = ..#CONTENTTYPEJSON
-        write { "message": "Person not found" }.%ToJSON()
+    Set person = ##class(MyCorporation.Service.PersonService).FindById(id)
+    If '$ISOBJECT(person)
+    {
+        Set %response.Status = ..#HTTP404NOTFOUND
+        Set %response.ContentType = ..#CONTENTTYPEJSON
+        Write { "message": "Person not found" }.%ToJSON()
         Quit $$$OK
     }
 
-     try {
-        set person.Name = dto.%Get("name")
-        set person.DOB = $ZDH(dto.%Get("dob"),3)
-        set person.SSN = dto.%Get("ssn")
-        set sc = person.%Save()
+     Try
+     {
+        Set person.Name = dto.%Get("name")
+        Set person.DOB = $ZDATEH(dto.%Get("dob"),3)
+        Set person.SSN = dto.%Get("ssn")
+        Set sc = person.%Save()
         $$$ThrowOnError(sc)
 
-        set %response.Status = ..#HTTP204NOCONTENT
-    
-    } catch ex {
+        Set %response.Status = ..#HTTP204NOCONTENT
+    }
+    Catch ex
+    {
+        Set %response.Status = ..#HTTP400BADREQUEST
+        Set %response.ContentType = ..#CONTENTTYPEJSON
+        Set error = {}
+        Do error.%Set("code", ex.Code)
+        Do error.%Set("name", ex.Name)
+        Do error.%Set("location", ex.Location)
+        Do error.%Set("data", ex.Data)
 
-        set %response.Status = ..#HTTP400BADREQUEST
-        set %response.ContentType = ..#CONTENTTYPEJSON
-        set error = {}
-        do error.%Set("code", ex.Code)
-        do error.%Set("name", ex.Name)
-        do error.%Set("location", ex.Location)
-        do error.%Set("data", ex.Data)
-        
-        write error.%ToJSON()
-    }  
+        Write error.%ToJSON()
+    }
 
     Quit $$$OK
 }
 
 ClassMethod DeletePerson(id As %Integer) As %Status
 {
-    set person = ##class(MyCorporation.Service.PersonService).FindById(id)
-    if '$ISOBJECT(person) {
-        set %response.Status = ..#HTTP404NOTFOUND
-        set %response.ContentType = ..#CONTENTTYPEJSON
-        write { "message": "Person not found" }.%ToJSON()
-        Quit $$$OK
-    }
-
-    set sc = person.%DeleteId(id)
-    if 'sc
+    Set person = ##class(MyCorporation.Service.PersonService).FindById(id)
+    If '$ISOBJECT(person)
     {
-        set %response.Status = ..#HTTP400BADREQUEST
-        set %response.ContentType = ..#CONTENTTYPEJSON
-        write { "message": "Error on delete person" }.%ToJSON()
+        Set %response.Status = ..#HTTP404NOTFOUND
+        Set %response.ContentType = ..#CONTENTTYPEJSON
+        Write { "message": "Person not found" }.%ToJSON()
         Quit $$$OK
     }
 
-    set %response.Status = ..#HTTP204NOCONTENT
+    Set sc = person.%DeleteId(id)
+    If 'sc
+    {
+        Set %response.Status = ..#HTTP400BADREQUEST
+        Set %response.ContentType = ..#CONTENTTYPEJSON
+        Write { "message": "Error on delete person" }.%ToJSON()
+        Quit $$$OK
+    }
+
+    Set %response.Status = ..#HTTP204NOCONTENT
 
     Quit $$$OK
 }
 
 ClassMethod GetPerson(id As %Integer) As %Status
 {
-    set person = ##class(MyCorporation.Service.PersonService).GetPerson(id)
+    Set person = ##class(MyCorporation.Service.PersonService).GetPerson(id)
 
-    if '$ISOBJECT(person) {
-        set %response.Status = ..#HTTP404NOTFOUND
-        set %response.ContentType = ..#CONTENTTYPEJSON
-        write { "message": "Person not found" }.%ToJSON()
+    If '$ISOBJECT(person)
+    {
+        Set %response.Status = ..#HTTP404NOTFOUND
+        Set %response.ContentType = ..#CONTENTTYPEJSON
+        Write { "message": "Person not found" }.%ToJSON()
 
         Quit $$$OK
     }
 
-    set json = ##class(MyCorporation.Rest.PersonMapper).ObjectToJSON(person)
+    Set json = ##class(MyCorporation.Rest.PersonMapper).ObjectToJSON(person)
 
-    set %response.Status = ..#HTTP200OK
-    set %response.ContentType = ..#CONTENTTYPEJSON
-    write json.%ToJSON()
+    Set %response.Status = ..#HTTP200OK
+    Set %response.ContentType = ..#CONTENTTYPEJSON
+    Write json.%ToJSON()
 
     Quit $$$OK
 }
@@ -147,16 +153,16 @@ ClassMethod GetAllPersons() As %Status
 {
     Set persons = []
     Set rs = ##class(MyCorporation.Service.PersonService).GetAllPersons()
-    
+
     While rs.%Next()
     {
         Set person = ##class(MyCorporation.Rest.PersonMapper).StatementResultToJSON(rs)
         Do persons.%Push(person)
     }
 
-    set %response.Status = ..#HTTP200OK
-    set %response.ContentType = ..#CONTENTTYPEJSON
-    write persons.%ToJSON()
+    Set %response.Status = ..#HTTP200OK
+    Set %response.ContentType = ..#CONTENTTYPEJSON
+    Write persons.%ToJSON()
 
     Quit $$$OK
 }

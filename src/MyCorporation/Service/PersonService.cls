@@ -13,11 +13,13 @@ ClassMethod Populate(amount As %Integer = 100) As %Status
 ClassMethod CreatePerson(person As MyCorporation.Data.Person) As %Status
 {
 
-    Try {
+    Try
+    {
         Set sc = person.%Save()
         $$$ThrowOnError(sc)
     }
-    Catch ex {
+    Catch ex
+    {
         Throw ex
     }
 }
@@ -40,7 +42,8 @@ ClassMethod GetPerson(id As %Integer) As MyCorporation.Data.Person
 ClassMethod ListData()
 {
     Set rs=##class(%SQL.Statement).%ExecDirect(,"SELECT * FROM MyCorporation_Data.Person")
-    While rs.%Next() {
+    While rs.%Next()
+    {
         Write !,$ZCONVERT(rs.%Get("Name"),"U"), " "
         Write $ZDATE(rs.%Get("DOB"),4)," "
         Write rs.%Get("SSN")
@@ -49,10 +52,10 @@ ClassMethod ListData()
 
 ClassMethod PrintClassName()
 {
-        Set t=##class(MyCorporation.Data.Person).%New()
+    Set t=##class(MyCorporation.Data.Person).%New()
 
-        Write !,"Class name: ",t.%ClassName()
-        Write !,"Full Class name: ",t.%ClassName(1)
+    Write !,"Class name: ",t.%ClassName()
+    Write !,"Full Class name: ",t.%ClassName(1)
 }
 
 }

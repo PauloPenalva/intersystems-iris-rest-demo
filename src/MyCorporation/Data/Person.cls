@@ -1,4 +1,4 @@
-Class MyCorporation.Data.Person Extends (%Persistent, %Populate) [ SqlTableName = Person ]
+Class MyCorporation.Data.Person Extends (%Persistent, %Populate)
 {
 
 Property Name As %String [ Required ];
@@ -13,7 +13,7 @@ Index NameIndex On Name;
 
 Index SSNIndex On SSN [ Unique ];
 
-Property NameUpperCase As %String [ Calculated, SqlComputeCode = { set {*} = $ZCVT({Name}, "U") }, SqlComputed ];
+Property NameUpperCase As %String [ Calculated, SqlComputeCode = { Set {*} = $ZCONVERT({Name}, "U") }, SqlComputed ];
 
 Storage Default
 {
