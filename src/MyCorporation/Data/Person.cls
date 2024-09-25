@@ -1,7 +1,7 @@
-Class MyCorporation.Data.Person Extends (%Persistent, %Populate, %JSON.Adaptor)
+Class MyCorporation.Data.Person Extends (%Persistent, %Populate) [ SqlTableName = Person ]
 {
 
-Property Name As %String;
+Property Name As %String [ Required ];
 
 Property DOB As %Date;
 
@@ -11,7 +11,9 @@ Property SSN As %String;
 
 Index NameIndex On Name;
 
-Index SSNIndex On SSN;
+Index SSNIndex On SSN [ Unique ];
+
+Property NameUpperCase As %String [ Calculated, SqlComputeCode = { set {*} = $ZCVT({Name}, "U") }, SqlComputed ];
 
 Storage Default
 {

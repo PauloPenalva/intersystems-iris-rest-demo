@@ -12,7 +12,14 @@ ClassMethod Populate(amount As %Integer = 100) As %Status
 
 ClassMethod CreatePerson(person As MyCorporation.Data.Person) As %Status
 {
-        return person.%Save()
+       
+        Try {
+          set sc = person.%Save()
+          $$$ThrowOnError(sc)
+        }
+        Catch ex {
+          throw ex
+        }
 }
 
 ClassMethod FindById(id As %Integer) As MyCorporation.Data.Person

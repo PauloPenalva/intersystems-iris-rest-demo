@@ -18,7 +18,7 @@ XData UrlMap [ XMLNamespace = "https://www.intersystems.com/urlmap" ]
 
 ClassMethod Populate(amount As %Integer) As %Status
 {
-    return ##class(MyCorporation.Service.PersonService).Populate(amount)
+    Quit ##class(MyCorporation.Service.PersonService).Populate(amount)
 }
 
 ClassMethod Ping() As %Status
@@ -31,24 +31,31 @@ ClassMethod Ping() As %Status
 
 ClassMethod CreatePerson() As %Status
 {
-    set dto = %request.Content
+    #dim ex As %Exception.SystemException
 
-    set person = ##class(MyCorporation.Rest.PersonMapper).FromJSON(dto)
-    set sc = person.%Save()
-    if 'sc
-    {
+
+    try {
+        set dto = %request.Content
+        set person = ##class(MyCorporation.Rest.PersonMapper).FromJSON(dto)
+        
+        do ##class(MyCorporation.Service.PersonService).CreatePerson(person)
+
+        set json = ##class(MyCorporation.Rest.PersonMapper).ObjectToJSON(person)
+
+        set %response.Status = ..#HTTP200OK
+        set %response.ContentType = ..#CONTENTTYPEJSON
+        write json.%ToJSON()
+    } catch ex {
         set %response.Status = ..#HTTP400BADREQUEST
         set %response.ContentType = ..#CONTENTTYPEJSON
-        write { "message": "Error on save person" }.%ToJSON()
-    
-        Quit $$$OK
-    }   
-
-    set json = ##class(MyCorporation.Rest.PersonMapper).ObjectToJSON(person)
-
-    set %response.Status = ..#HTTP200OK
-    set %response.ContentType = ..#CONTENTTYPEJSON
-    write json.%ToJSON()
+        set error = {}
+        do error.%Set("code", ex.Code)
+        do error.%Set("name", ex.Name)
+        do error.%Set("location", ex.Location)
+        do error.%Set("data", ex.Data)
+        
+        write error.%ToJSON()
+    }
 
     Quit $$$OK
 }
@@ -60,29 +67,34 @@ ClassMethod UpdatePerson(id As %Integer) As %Status
 
     set person = ##class(MyCorporation.Service.PersonService).FindById(id)
     if '$ISOBJECT(person) {
-        set %response.ContentType = ..#CONTENTTYPEJSON
         set %response.Status = ..#HTTP404NOTFOUND
-        write { "message": "Person not found" }.%ToJSON()
-       
-        Quit $$$OK
-    }
-
-    set person.Name = dto.%Get("name")
-    set person.DOB = $ZDH(dto.%Get("dob"),3)
-    set person.SSN = dto.%Get("ssn")
-
-    set sc = person.%Save()
-    if 'sc
-    {
         set %response.ContentType = ..#CONTENTTYPEJSON
-        set %response.Status = ..#HTTP400BADREQUEST
-        write { "message": "Error on save person" }.%ToJSON()
-        
+        write { "message": "Person not found" }.%ToJSON()
         Quit $$$OK
     }
 
-    set %response.Status = ..#HTTP204NOCONTENT
+     try {
+        set person.Name = dto.%Get("name")
+        set person.DOB = $ZDH(dto.%Get("dob"),3)
+        set person.SSN = dto.%Get("ssn")
+        set sc = person.%Save()
+        $$$ThrowOnError(sc)
+
+        set %response.Status = ..#HTTP204NOCONTENT
     
+    } catch ex {
+
+        set %response.Status = ..#HTTP400BADREQUEST
+        set %response.ContentType = ..#CONTENTTYPEJSON
+        set error = {}
+        do error.%Set("code", ex.Code)
+        do error.%Set("name", ex.Name)
+        do error.%Set("location", ex.Location)
+        do error.%Set("data", ex.Data)
+        
+        write error.%ToJSON()
+    }  
+
     Quit $$$OK
 }
 
